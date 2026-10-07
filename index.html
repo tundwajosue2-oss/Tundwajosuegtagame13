@@ -1,1 +1,1879 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Josue Tundwa GTA · ULTIMATE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a12; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { display: flex; justify-content: center; align-items: center; }
 
+        #gameWrapper { position: relative; border: 3px solid #1a3a6a; border-radius: 12px; box-shadow: 0 0 80px rgba(0, 50, 200, 0.3); background: #0a1a2a; max-width: 100vw; max-height: 100vh; transition: all 0.4s ease; }
+        canvas { display: block; background: #1a2a3a; border-radius: 10px; cursor: crosshair; touch-action: none; width: 100%; height: auto; max-width: 100vw; max-height: 100vh; }
+
+        #phonePreviewBtn {
+            position: fixed; top: 15px; right: 15px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white; border: none; border-radius: 50px;
+            padding: 12px 20px; font-size: 14px; font-weight: 700;
+            cursor: pointer; z-index: 200;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
+            display: flex; align-items: center; gap: 8px;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        #phonePreviewBtn:hover { transform: scale(1.05); box-shadow: 0 6px 30px rgba(59, 130, 246, 0.7); }
+        #phonePreviewBtn.active { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+
+        body.phone-mode #gameWrapper { width: 340px !important; height: 640px !important; border: 12px solid #1a1a1a; border-radius: 40px; box-shadow: 0 0 100px rgba(0, 200, 255, 0.4), 0 0 40px rgba(0,0,0,0.8); margin: 20px; }
+        body.phone-mode #gameWrapper::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 80px; height: 22px; background: #1a1a1a; border-radius: 0 0 15px 15px; z-index: 5; }
+        body.phone-mode canvas { width: 100% !important; height: 100% !important; border-radius: 28px; object-fit: fill; }
+        body.phone-mode #touchControls { display: block !important; }
+        body.phone-mode .controls-info { display: none !important; }
+        body.phone-mode { background: radial-gradient(circle at center, #1a1a3a, #0a0a12); }
+
+        #startScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; border-radius: 10px; overflow: hidden; background: linear-gradient(180deg, #0a0e2a 0%, #1a1e4a 30%, #4a2a6a 60%, #8a3a5a 85%, #d44a3a 100%); }
+        #startScreen::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 60%; background-image: radial-gradient(1px 1px at 10% 20%, white, transparent), radial-gradient(1px 1px at 30% 10%, white, transparent), radial-gradient(2px 2px at 50% 30%, white, transparent), radial-gradient(1px 1px at 70% 15%, white, transparent), radial-gradient(1px 1px at 90% 25%, white, transparent); animation: twinkle 3s ease-in-out infinite; }
+        @keyframes twinkle { 0%, 100% { opacity: 0.8; } 50% { opacity: 0.3; } }
+        #startScreen .sun { position: absolute; bottom: 35%; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, #ffcc44, #ff8844, #ff4422); box-shadow: 0 0 80px #ff8844, 0 0 150px #ff4422; animation: sunPulse 4s ease-in-out infinite; }
+        @keyframes sunPulse { 0%, 100% { box-shadow: 0 0 80px #ff8844, 0 0 150px #ff4422; } 50% { box-shadow: 0 0 120px #ffaa66, 0 0 200px #ff6633; } }
+        #startScreen .city { position: absolute; bottom: 0; left: 0; width: 100%; height: 45%; display: flex; align-items: flex-end; justify-content: space-around; padding: 0 20px; }
+        #startScreen .building { background: linear-gradient(180deg, #1a1a3a, #0a0a2a); border-top: 2px solid rgba(100, 150, 255, 0.3); position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+        #startScreen .building::after { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #ff3333; box-shadow: 0 0 8px #ff3333; animation: blink 1.5s ease-in-out infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+        #startScreen .building .windows { position: absolute; top: 10px; left: 5px; right: 5px; bottom: 5px; background-image: repeating-linear-gradient(0deg, transparent, transparent 6px, rgba(255,220,100,0.15) 6px, rgba(255,220,100,0.15) 7px), repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(255,220,100,0.15) 6px, rgba(255,220,100,0.15) 7px); }
+        #startScreen .content { position: relative; z-index: 10; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        #startScreen .logo { font-size: 4.5rem; font-weight: 900; color: #fff; text-shadow: 0 0 40px rgba(59, 130, 246, 0.8), 0 4px 20px rgba(0,0,0,0.9); letter-spacing: 4px; margin-bottom: 8px; animation: logoGlow 2s ease-in-out infinite; }
+        @keyframes logoGlow { 0%, 100% { text-shadow: 0 0 40px rgba(59, 130, 246, 0.8), 0 4px 20px rgba(0,0,0,0.9); } 50% { text-shadow: 0 0 60px rgba(59, 130, 246, 1), 0 4px 20px rgba(0,0,0,0.9), 0 0 100px rgba(251, 191, 36, 0.5); } }
+        #startScreen .logo span { color: #fbbf24; text-shadow: 0 0 40px rgba(251, 191, 36, 0.6); }
+        #startScreen .subtitle { font-size: 1.4rem; color: rgba(255,255,255,0.85); letter-spacing: 8px; margin-bottom: 30px; font-weight: 300; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+        #startScreen .btn-start { padding: 16px 48px; font-size: 1.3rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 0 40px rgba(59, 130, 246, 0.5), 0 8px 20px rgba(0,0,0,0.5); letter-spacing: 2px; margin-top: 10px; position: relative; overflow: hidden; }
+        #startScreen .btn-start::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shine 3s infinite; }
+        @keyframes shine { 0% { left: -100%; } 50%, 100% { left: 100%; } }
+        #startScreen .btn-start:hover { transform: scale(1.06); }
+        #startScreen .creator { font-size: 1rem; color: rgba(255,255,255,0.7); margin-top: 20px; letter-spacing: 3px; }
+        #startScreen .version { position: absolute; bottom: 15px; color: rgba(255,255,255,0.4); font-size: 0.75rem; letter-spacing: 2px; z-index: 10; }
+
+        /* ⚙️ SÉLECTEUR DE DIFFICULTÉ */
+        .difficulty-selector {
+            margin: 15px 0 10px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        .diff-title {
+            color: #fbbf24;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 0 15px rgba(251,191,36,0.5);
+        }
+        .diff-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .diff-btn {
+            padding: 10px 18px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            letter-spacing: 1px;
+            font-family: inherit;
+        }
+        .diff-btn:hover { transform: scale(1.05); border-color: #3b82f6; }
+        .diff-btn.active {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-color: #60a5fa;
+            box-shadow: 0 0 20px rgba(59,130,246,0.6);
+        }
+        .diff-btn[data-diff="facile"].active {
+            background: linear-gradient(135deg, #22c55e, #15803d);
+            border-color: #4ade80;
+            box-shadow: 0 0 20px rgba(34,197,94,0.6);
+        }
+        .diff-btn[data-diff="difficile"].active {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            border-color: #f87171;
+            box-shadow: 0 0 20px rgba(239,68,68,0.6);
+        }
+        .diff-desc {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.75rem;
+            font-style: italic;
+            min-height: 18px;
+        }
+        body.phone-mode .diff-btn { padding: 6px 12px; font-size: 0.65rem; }
+        body.phone-mode .diff-title { font-size: 0.75rem; }
+        body.phone-mode .diff-desc { font-size: 0.6rem; }
+        body.phone-mode #difficultySelector { margin: 8px 0; }
+
+        #hud { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; font-size: 12px; font-weight: 600; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.9); z-index: 10; }
+        .hud-left, .hud-right { background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 8px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.06); pointer-events: auto; }
+        .hud-left span, .hud-right span { display: inline-block; margin-right: 10px; }
+        .hud-left .money { color: #4ade80; }
+        .hud-left .health { color: #f87171; }
+        .hud-left .level { color: #fbbf24; }
+        .hud-left .diff-hud { color: #a855f7; }
+        .hud-right .fps { color: #60a5fa; font-size: 10px; }
+        .hud-right .wanted { color: #fbbf24; }
+        .hud-right .combo { color: #f97316; font-weight: 700; }
+
+        #healthBarContainer {
+            position: absolute; top: 60px; left: 12px;
+            width: 200px; height: 14px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 7px;
+            border: 2px solid rgba(255,255,255,0.2);
+            overflow: hidden;
+            z-index: 15; display: none;
+        }
+        #healthBarFill {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+
+        #comboPopup {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 60px; font-weight: 900;
+            color: #f97316; text-shadow: 0 0 30px #f97316, 0 0 60px #ea580c;
+            z-index: 30; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s;
+            font-family: 'Impact', sans-serif;
+        }
+        #comboPopup.show { opacity: 1; animation: comboPulse 0.5s ease; }
+        @keyframes comboPulse { 0% { transform: translate(-50%, -50%) scale(0.5); } 50% { transform: translate(-50%, -50%) scale(1.3); } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        #achievementPopup {
+            position: absolute; top: 20%; right: 20px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #1a1a2e; padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 700; font-size: 13px;
+            z-index: 40; display: none;
+            box-shadow: 0 10px 40px rgba(251, 191, 36, 0.6);
+            border: 2px solid #fff;
+            min-width: 200px;
+        }
+        #achievementPopup.show { display: block; animation: slideInRight 0.5s ease, fadeOut 4s ease forwards; }
+        @keyframes slideInRight { from { transform: translateX(300px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+
+        #achievementsPanel {
+            position: absolute; top: 50px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 15, 30, 0.95);
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 45; display: none;
+            min-width: 320px;
+            max-width: 90%;
+            color: white;
+            box-shadow: 0 0 60px rgba(251, 191, 36, 0.4);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        #achievementsPanel.show { display: block; }
+        #achievementsPanel h2 { color: #fbbf24; margin-bottom: 12px; text-align: center; }
+        .achievement-item { display: flex; align-items: center; gap: 10px; padding: 8px; margin-bottom: 6px; background: rgba(30, 40, 60, 0.6); border-radius: 8px; }
+        .achievement-item.locked { opacity: 0.4; }
+        .achievement-item .icon { font-size: 1.5rem; }
+        .achievement-item .name { font-weight: 600; }
+        .achievement-item .desc { font-size: 10px; color: #8ab4d6; }
+
+        .mission-box { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); padding: 8px 20px; border-radius: 40px; border: 1px solid rgba(255,200,50,0.15); color: #fbbf24; font-weight: 600; font-size: 13px; text-align: center; pointer-events: none; z-index: 10; white-space: nowrap; }
+        .controls-info { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.25); font-size: 10px; pointer-events: none; z-index: 10; background: rgba(0,0,0,0.4); padding: 3px 14px; border-radius: 40px; }
+
+        #minimap { position: absolute; bottom: 45px; right: 14px; width: 110px; height: 110px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); overflow: hidden; pointer-events: none; z-index: 10; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        #minimap canvas { width: 100%; height: 100%; border-radius: 50%; }
+
+        #notification { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); padding: 15px 30px; border-radius: 10px; color: white; font-size: 16px; font-weight: 600; z-index: 50; display: none; border: 2px solid #3b82f6; text-align: center; }
+        #notification.show { display: block; animation: fadeInOut 2s ease; }
+        @keyframes fadeInOut { 0% { opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
+
+        #musicControl {
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 6px; z-index: 30;
+            background: rgba(0, 0, 0, 0.8); padding: 6px 12px; border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px); align-items: center;
+            font-size: 12px; font-weight: 600; color: white;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); max-width: 95%;
+        }
+        #musicControl .music-btn { background: rgba(59, 130, 246, 0.4); border: 1px solid rgba(59, 130, 246, 0.6); color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.2s; padding: 0; flex-shrink: 0; }
+        #musicControl .music-btn:hover { background: rgba(59, 130, 246, 0.8); transform: scale(1.1); }
+        #musicControl .music-btn.muted { background: rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.6); }
+        #musicControl .music-info { color: #4ade80; font-size: 10px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; font-weight: 600; }
+        #musicControl .volume-slider { width: 60px; height: 4px; -webkit-appearance: none; appearance: none; background: rgba(255, 255, 255, 0.2); border-radius: 2px; outline: none; cursor: pointer; flex-shrink: 0; }
+        #musicControl .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #3b82f6; cursor: pointer; box-shadow: 0 0 10px rgba(59, 130, 246, 0.8); }
+        #musicControl .music-track-number { color: #fbbf24; font-size: 10px; font-weight: 700; background: rgba(251, 191, 36, 0.15); padding: 2px 6px; border-radius: 10px; flex-shrink: 0; }
+        #musicNotif { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.92); color: #4ade80; padding: 8px 18px; border-radius: 40px; font-size: 12px; font-weight: 600; z-index: 30; opacity: 0; transition: opacity 0.3s; pointer-events: none; border: 1px solid rgba(74, 222, 128, 0.4); box-shadow: 0 4px 30px rgba(74, 222, 128, 0.3); white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis; }
+        #musicNotif.show { opacity: 1; }
+        #equalizer { display: flex; gap: 2px; align-items: flex-end; height: 22px; padding: 0 4px; }
+        #equalizer .bar { width: 3px; background: linear-gradient(180deg, #4ade80, #22c55e); border-radius: 2px; transition: height 0.1s; min-height: 3px; }
+        #equalizer.paused .bar { height: 3px !important; background: rgba(255, 255, 255, 0.2); }
+        #progressBar { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: rgba(255, 255, 255, 0.1); border-radius: 0 0 40px 40px; overflow: hidden; }
+        #progressFill { height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #60a5fa); transition: width 0.1s linear; }
+        #musicControl .music-btn.shuffle-on { background: rgba(251, 191, 36, 0.6); border-color: rgba(251, 191, 36, 0.8); box-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
+        #musicControl .music-btn.repeat-on { background: rgba(168, 85, 247, 0.6); border-color: rgba(168, 85, 247, 0.8); box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); }
+
+        #touchControls { position: absolute; bottom: 0; left: 0; right: 0; height: 100%; pointer-events: none; z-index: 20; display: none; }
+        #touchControls.active { display: block; }
+        #joystick { position: absolute; bottom: 100px; left: 30px; width: 130px; height: 130px; border-radius: 50%; background: rgba(59, 130, 246, 0.15); border: 2px solid rgba(59, 130, 246, 0.4); pointer-events: auto; touch-action: none; backdrop-filter: blur(4px); }
+        #joystickKnob { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle, #60a5fa, #3b82f6); border: 2px solid rgba(255,255,255,0.5); transform: translate(-50%, -50%); box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
+
+        .action-btn { position: absolute; width: 80px; height: 80px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); display: flex; justify-content: center; align-items: center; color: white; font-weight: 700; font-size: 14px; pointer-events: auto; touch-action: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .action-btn:active { transform: scale(0.9); }
+        #btnShoot { bottom: 100px; right: 30px; width: 90px; height: 90px; font-size: 24px; background: radial-gradient(circle, #ef4444, #b91c1c); box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+        #btnEnter { bottom: 200px; right: 30px; background: radial-gradient(circle, #22c55e, #15803d); }
+        #btnBuy { bottom: 200px; right: 120px; background: radial-gradient(circle, #fbbf24, #d97706); width: 70px; height: 70px; }
+        #btnWeapon { bottom: 290px; right: 30px; background: radial-gradient(circle, #a855f7, #7e22ce); width: 70px; height: 70px; }
+        #btnMusic { bottom: 290px; right: 120px; background: radial-gradient(circle, #06b6d4, #0891b2); width: 70px; height: 70px; }
+        #btnAchievements { bottom: 380px; right: 30px; background: radial-gradient(circle, #fbbf24, #d97706); width: 60px; height: 60px; font-size: 22px; }
+
+        body.phone-mode #joystick { width: 100px; height: 100px; bottom: 80px; left: 15px; }
+        body.phone-mode #joystickKnob { width: 45px; height: 45px; }
+        body.phone-mode #btnShoot { width: 70px; height: 70px; bottom: 80px; right: 15px; font-size: 20px; }
+        body.phone-mode #btnEnter { width: 55px; height: 55px; bottom: 160px; right: 15px; }
+        body.phone-mode #btnBuy { width: 50px; height: 50px; bottom: 160px; right: 80px; }
+        body.phone-mode #btnWeapon { width: 50px; height: 50px; bottom: 225px; right: 15px; }
+        body.phone-mode #btnMusic { width: 50px; height: 50px; bottom: 225px; right: 80px; }
+        body.phone-mode #btnAchievements { width: 45px; height: 45px; bottom: 290px; right: 15px; font-size: 18px; }
+        body.phone-mode #hud { font-size: 9px; }
+        body.phone-mode #healthBarContainer { width: 120px; top: 45px; left: 8px; height: 10px; }
+        body.phone-mode #minimap { width: 65px; height: 65px; bottom: 120px; right: 8px; }
+        body.phone-mode #startScreen .logo { font-size: 2rem; }
+        body.phone-mode #startScreen .subtitle { font-size: 0.8rem; }
+        body.phone-mode #startScreen .btn-start { padding: 10px 28px; font-size: 0.9rem; }
+        body.phone-mode #achievementsPanel { min-width: 260px; padding: 12px; }
+        body.phone-mode #comboPopup { font-size: 40px; }
+        body.phone-mode #musicControl { top: auto; bottom: 350px; padding: 4px 8px; font-size: 10px; gap: 4px; }
+        body.phone-mode #musicControl .music-btn { width: 24px; height: 24px; font-size: 10px; }
+        body.phone-mode #musicControl .volume-slider { width: 40px; }
+        body.phone-mode #musicControl .music-info { max-width: 60px; font-size: 8px; }
+        body.phone-mode #musicControl .music-track-number { font-size: 8px; padding: 2px 5px; }
+        body.phone-mode #equalizer { display: none; }
+        body.phone-mode #musicNotif { font-size: 10px; padding: 6px 12px; }
+    </style>
+</head>
+<body>
+
+<button id="phonePreviewBtn"><span id="phoneBtnIcon">📱</span> <span id="phoneBtnText">Aperçu Téléphone</span></button>
+
+<div id="gameWrapper">
+    <canvas id="gameCanvas" width="900" height="600"></canvas>
+
+    <div id="startScreen">
+        <div class="sun"></div>
+        <div class="city">
+            <div class="building" style="width: 40px; height: 80px;"><div class="windows"></div></div>
+            <div class="building" style="width: 50px; height: 130px;"><div class="windows"></div></div>
+            <div class="building" style="width: 35px; height: 100px;"><div class="windows"></div></div>
+            <div class="building" style="width: 60px; height: 180px;"><div class="windows"></div></div>
+            <div class="building" style="width: 45px; height: 150px;"><div class="windows"></div></div>
+            <div class="building" style="width: 55px; height: 200px;"><div class="windows"></div></div>
+            <div class="building" style="width: 40px; height: 120px;"><div class="windows"></div></div>
+            <div class="building" style="width: 50px; height: 160px;"><div class="windows"></div></div>
+            <div class="building" style="width: 35px; height: 90px;"><div class="windows"></div></div>
+        </div>
+        <div class="content">
+            <div class="logo">JOSUE <span>TUNDWA</span></div>
+            <div class="subtitle">⚡ GTA ⚡</div>
+
+            <!-- ⚙️ SÉLECTEUR DE DIFFICULTÉ -->
+            <div class="difficulty-selector" id="difficultySelector">
+                <div class="diff-title">⚙️ DIFFICULTÉ</div>
+                <div class="diff-buttons">
+                    <button class="diff-btn" data-diff="facile">🟢 FACILE</button>
+                    <button class="diff-btn active" data-diff="moyen">🟡 MOYEN</button>
+                    <button class="diff-btn" data-diff="difficile">🔴 DIFFICILE</button>
+                </div>
+                <div class="diff-desc" id="diffDesc">🟡 Équilibré — L'expérience classique</div>
+            </div>
+
+            <button class="btn-start" id="startBtn">▶ COMMENCER</button>
+            <div class="creator">👤 Josue Tundwa · 2026</div>
+        </div>
+        <div class="version">v6.0 DIFFICULTY EDITION · OBANYS GAMES</div>
+    </div>
+
+    <div id="musicControl" style="display: none;">
+        <button class="music-btn" id="musicShuffleBtn" title="Aléatoire">🔀</button>
+        <button class="music-btn" id="musicPrevBtn" title="Précédent">⏮</button>
+        <button class="music-btn" id="musicPlayBtn" title="Play/Pause">▶</button>
+        <button class="music-btn" id="musicNextBtn" title="Suivant">⏭</button>
+        <button class="music-btn" id="musicRepeatBtn" title="Répéter">🔁</button>
+        <div id="equalizer">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <span class="music-track-number" id="trackNumber">1/10</span>
+        <span class="music-info" id="musicInfo">Chargement...</span>
+        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50" title="Volume">
+        <div id="progressBar"><div id="progressFill"></div></div>
+    </div>
+
+    <div id="musicNotif">🎵 Musique activée</div>
+
+    <div id="hud" style="display:none;">
+        <div class="hud-left">
+            <span>🏦 <span class="money" id="moneyDisplay">5000</span></span>
+            <span>❤️ <span class="health" id="healthDisplay">100</span></span>
+            <span>⭐ <span class="level" id="levelDisplay">1</span></span>
+            <span>🔫 <span id="weaponDisplay">Pistolet</span></span>
+            <span>🚗 <span id="vehicleDisplay">À pied</span></span>
+            <span>⚙️ <span class="diff-hud" id="diffDisplay">Moyen</span></span>
+        </div>
+        <div class="hud-right">
+            <span>🎯 <span id="killsDisplay">0</span></span>
+            <span class="wanted" id="wantedDisplay">⭐ 0</span>
+            <span class="combo" id="comboDisplay"></span>
+            <span class="fps" id="fpsDisplay">FPS: 60</span>
+        </div>
+    </div>
+
+    <div id="healthBarContainer"><div id="healthBarFill"></div></div>
+    <div id="comboPopup">x2 COMBO!</div>
+    <div id="achievementPopup"></div>
+
+    <div id="achievementsPanel">
+        <h2>🏆 SUCCÈS</h2>
+        <div id="achievementsList"></div>
+    </div>
+
+    <div class="mission-box" id="missionBox" style="display:none;">🎯 Mission en cours...</div>
+    <div id="minimap" style="display:none;"><canvas id="minimapCanvas" width="110" height="110"></canvas></div>
+    <div id="notification"></div>
+
+    <div class="controls-info" style="display:none;">
+        ↑↓←→ Déplacer · CLIC Tirer · R Recharger · 1-3 Armes · E Véhicule · F Acheter · T Succès · P Sauvegarder · N Musique Suivante
+    </div>
+
+    <div id="touchControls">
+        <div id="joystick"><div id="joystickKnob"></div></div>
+        <div class="action-btn" id="btnShoot">🔫</div>
+        <div class="action-btn" id="btnEnter">🚗</div>
+        <div class="action-btn" id="btnBuy">$</div>
+        <div class="action-btn" id="btnWeapon">🔫</div>
+        <div class="action-btn" id="btnMusic">🎵</div>
+        <div class="action-btn" id="btnAchievements">🏆</div>
+    </div>
+</div>
+
+<audio id="bgMusic" preload="auto"></audio>
+
+<script>
+(function() {
+    // ============================================================
+    //  ⚙️ SYSTÈME DE DIFFICULTÉ
+    // ============================================================
+    const DIFFICULTY_PRESETS = {
+        facile: {
+            name: 'Facile',
+            desc: '🟢 Vie régénérée · Ennemis faibles · Argent x2',
+            enemyHpMult: 0.6,
+            enemyDamageMult: 0.5,
+            enemySpeedMult: 0.7,
+            enemySpawnRate: 3000,
+            maxEnemiesMult: 0.6,
+            moneyMult: 2,
+            playerDamageTaken: 0.5,
+            policeSpawnRate: 0.008,
+            autoHeal: true,
+            playerStartMoney: 8000
+        },
+        moyen: {
+            name: 'Moyen',
+            desc: '🟡 Équilibré — L\'expérience classique',
+            enemyHpMult: 1,
+            enemyDamageMult: 1,
+            enemySpeedMult: 1,
+            enemySpawnRate: 2000,
+            maxEnemiesMult: 1,
+            moneyMult: 1,
+            playerDamageTaken: 1,
+            policeSpawnRate: 0.02,
+            autoHeal: false,
+            playerStartMoney: 5000
+        },
+        difficile: {
+            name: 'Difficile',
+            desc: '🔴 Ennemis coriaces · Police agressive · Argent ÷2',
+            enemyHpMult: 1.8,
+            enemyDamageMult: 1.6,
+            enemySpeedMult: 1.4,
+            enemySpawnRate: 1200,
+            maxEnemiesMult: 1.5,
+            moneyMult: 0.5,
+            playerDamageTaken: 1.5,
+            policeSpawnRate: 0.05,
+            autoHeal: false,
+            playerStartMoney: 3000
+        }
+    };
+
+    let currentDifficulty = 'moyen';
+    let difficulty = DIFFICULTY_PRESETS.moyen;
+    let autoHealAccumulator = 0;
+
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentDifficulty = btn.dataset.diff;
+            difficulty = DIFFICULTY_PRESETS[currentDifficulty];
+            document.getElementById('diffDesc').textContent = difficulty.desc;
+        });
+    });
+
+    // ============================================================
+    //  APERÇU TÉLÉPHONE
+    // ============================================================
+    let phoneMode = false;
+    document.getElementById('phonePreviewBtn').addEventListener('click', function() {
+        phoneMode = !phoneMode;
+        document.body.classList.toggle('phone-mode', phoneMode);
+        document.getElementById('phoneBtnIcon').textContent = phoneMode ? '🖥️' : '📱';
+        document.getElementById('phoneBtnText').textContent = phoneMode ? 'Mode PC' : 'Aperçu Téléphone';
+        if (phoneMode) document.getElementById('touchControls').classList.add('active');
+        else {
+            const isRealMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || ('ontouchstart' in window);
+            if (!isRealMobile) document.getElementById('touchControls').classList.remove('active');
+        }
+        setTimeout(resizeCanvas, 100);
+    });
+
+    // ============================================================
+    //  AUDIO (effets sonores)
+    // ============================================================
+    let audioCtx = null;
+    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    function playSound(f, d, t = 'sine', v = 0.1) {
+        if (!audioCtx) return;
+        try {
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+            g.gain.setValueAtTime(v, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + d);
+        } catch(e) {}
+    }
+    function playShootSound() { playSound(200, 0.1, 'square', 0.05); }
+    function playExplosionSound() { playSound(60, 0.5, 'sawtooth', 0.15); }
+    function playMoneySound() { playSound(880, 0.15, 'sine', 0.08); }
+    function playHealthSound() { playSound(600, 0.2, 'sine', 0.08); }
+    function playLevelUpSound() { playSound(523, 0.15); setTimeout(() => playSound(659, 0.15), 150); setTimeout(() => playSound(784, 0.3), 300); }
+    function playAchievementSound() { playSound(784, 0.15); setTimeout(() => playSound(988, 0.15), 150); setTimeout(() => playSound(1319, 0.4), 300); }
+    function playHitSound() { playSound(150, 0.1, 'sawtooth', 0.08); }
+
+    // ============================================================
+    //  🎵 SYSTÈME DE MUSIQUE PREMIUM - 10 MUSIQUES
+    // ============================================================
+    const playlist = [
+        { file: 'music1.mp3',  title: '🔥 Musique 1'  },
+        { file: 'music2.mp3',  title: '🔥 Musique 2'  },
+        { file: 'music3.mp3',  title: '🔥 Musique 3'  },
+        { file: 'music4.mp3',  title: '🔥 Musique 4'  },
+        { file: 'music5.mp3',  title: '🔥 Musique 5'  },
+        { file: 'music6.mp3',  title: '🔥 Musique 6'  },
+        { file: 'music7.mp3',  title: '🔥 Musique 7'  },
+        { file: 'music8.mp3',  title: '🔥 Musique 8'  },
+        { file: 'music9.mp3',  title: '🔥 Musique 9'  },
+        { file: 'music10.mp3', title: '🔥 Musique 10' }
+    ];
+
+    let musicIndex = 0;
+    let musicVolume = 0.5;
+    let isMusicPlaying = false;
+    let musicInitialized = false;
+    let isShuffle = false;
+    let isRepeat = false;
+    let playedTracks = [];
+
+    const bgMusic = document.getElementById('bgMusic');
+    const musicControl = document.getElementById('musicControl');
+    const musicPlayBtn = document.getElementById('musicPlayBtn');
+    const musicNextBtn = document.getElementById('musicNextBtn');
+    const musicPrevBtn = document.getElementById('musicPrevBtn');
+    const musicShuffleBtn = document.getElementById('musicShuffleBtn');
+    const musicRepeatBtn = document.getElementById('musicRepeatBtn');
+    const musicInfo = document.getElementById('musicInfo');
+    const musicNotif = document.getElementById('musicNotif');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const trackNumber = document.getElementById('trackNumber');
+    const progressFill = document.getElementById('progressFill');
+    const equalizer = document.getElementById('equalizer');
+    const equalizerBars = equalizer.querySelectorAll('.bar');
+
+    function loadMusic(index) {
+        if (index < 0 || index >= playlist.length) return;
+        musicIndex = index;
+        bgMusic.src = playlist[index].file;
+        musicInfo.textContent = playlist[index].title;
+        trackNumber.textContent = (index + 1) + '/' + playlist.length;
+        if (isMusicPlaying) {
+            bgMusic.play().catch(e => console.log('Erreur:', e));
+        }
+    }
+
+    function toggleMusicPlay() {
+        if (!musicInitialized) { loadMusic(0); musicInitialized = true; }
+        if (isMusicPlaying) {
+            bgMusic.pause();
+            isMusicPlaying = false;
+            musicPlayBtn.textContent = '▶';
+            musicPlayBtn.classList.add('muted');
+            equalizer.classList.add('paused');
+            showMusicNotif('🔇 Musique en pause');
+        } else {
+            bgMusic.volume = musicVolume;
+            bgMusic.play().then(() => {
+                isMusicPlaying = true;
+                musicPlayBtn.textContent = '⏸';
+                musicPlayBtn.classList.remove('muted');
+                equalizer.classList.remove('paused');
+                showMusicNotif('🎵 ' + playlist[musicIndex].title);
+            }).catch(e => {
+                showMusicNotif('❌ Fichier introuvable');
+            });
+        }
+    }
+
+    function nextMusic() {
+        if (isShuffle) {
+            if (playedTracks.length >= playlist.length) playedTracks = [];
+            let newIndex;
+            do { newIndex = Math.floor(Math.random() * playlist.length); } while (playedTracks.includes(newIndex) && playedTracks.length < playlist.length);
+            playedTracks.push(newIndex);
+            musicIndex = newIndex;
+        } else {
+            musicIndex = (musicIndex + 1) % playlist.length;
+        }
+        loadMusic(musicIndex);
+        if (isMusicPlaying) bgMusic.play().catch(e => {});
+        showMusicNotif('⏭ ' + playlist[musicIndex].title);
+    }
+
+    function prevMusic() {
+        if (bgMusic.currentTime > 3) { bgMusic.currentTime = 0; return; }
+        if (isShuffle) {
+            let newIndex;
+            do { newIndex = Math.floor(Math.random() * playlist.length); } while (newIndex === musicIndex);
+            musicIndex = newIndex;
+        } else {
+            musicIndex = (musicIndex - 1 + playlist.length) % playlist.length;
+        }
+        loadMusic(musicIndex);
+        if (isMusicPlaying) bgMusic.play().catch(e => {});
+        showMusicNotif('⏮ ' + playlist[musicIndex].title);
+    }
+
+    function toggleShuffle() {
+        isShuffle = !isShuffle;
+        musicShuffleBtn.classList.toggle('shuffle-on', isShuffle);
+        showMusicNotif(isShuffle ? '🔀 Aléatoire ON' : '➡️ Aléatoire OFF');
+    }
+
+    function toggleRepeat() {
+        isRepeat = !isRepeat;
+        musicRepeatBtn.classList.toggle('repeat-on', isRepeat);
+        bgMusic.loop = isRepeat;
+        showMusicNotif(isRepeat ? '🔁 Répéter ON' : '➡️ Répéter OFF');
+    }
+
+    function changeVolume(value) { musicVolume = value / 100; bgMusic.volume = musicVolume; }
+    function showMusicNotif(text) {
+        musicNotif.textContent = text;
+        musicNotif.classList.add('show');
+        clearTimeout(musicNotif._timer);
+        musicNotif._timer = setTimeout(() => musicNotif.classList.remove('show'), 2000);
+    }
+
+    let equalizerInterval = null;
+    function startEqualizer() {
+        if (equalizerInterval) return;
+        equalizerInterval = setInterval(() => {
+            if (!isMusicPlaying) return;
+            equalizerBars.forEach((bar) => { bar.style.height = (3 + Math.random() * 19) + 'px'; });
+        }, 100);
+    }
+    function stopEqualizer() {
+        if (equalizerInterval) { clearInterval(equalizerInterval); equalizerInterval = null; }
+        equalizerBars.forEach(bar => bar.style.height = '3px');
+    }
+
+    function updateProgress() {
+        if (bgMusic.duration && isMusicPlaying) {
+            progressFill.style.width = (bgMusic.currentTime / bgMusic.duration) * 100 + '%';
+        }
+        requestAnimationFrame(updateProgress);
+    }
+
+    musicPlayBtn.addEventListener('click', toggleMusicPlay);
+    musicNextBtn.addEventListener('click', nextMusic);
+    musicPrevBtn.addEventListener('click', prevMusic);
+    musicShuffleBtn.addEventListener('click', toggleShuffle);
+    musicRepeatBtn.addEventListener('click', toggleRepeat);
+    volumeSlider.addEventListener('input', (e) => changeVolume(e.target.value));
+    bgMusic.addEventListener('ended', () => { if (!isRepeat) nextMusic(); });
+    bgMusic.addEventListener('play', () => { equalizer.classList.remove('paused'); startEqualizer(); });
+    bgMusic.addEventListener('pause', () => { equalizer.classList.add('paused'); stopEqualizer(); });
+
+    // ============================================================
+    //  CANVAS
+    // ============================================================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = 900, H = 600;
+    const miniCanvas = document.getElementById('minimapCanvas');
+    const miniCtx = miniCanvas.getContext('2d');
+
+    function resizeCanvas() {
+        const wrapper = document.getElementById('gameWrapper');
+        if (phoneMode) return;
+        const ratio = W / H;
+        const winW = window.innerWidth - 20;
+        const winH = window.innerHeight - 20;
+        let newW, newH;
+        if (winW / winH > ratio) { newH = winH; newW = winH * ratio; }
+        else { newW = winW; newH = winW / ratio; }
+        wrapper.style.width = newW + 'px';
+        wrapper.style.height = newH + 'px';
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // ============================================================
+    //  VARIABLES
+    // ============================================================
+    let money = 5000, health = 100, kills = 0, level = 1, wantedLevel = 0, wantedTimer = 0;
+    let currentWeapon = 'pistolet';
+
+    const weapons = {
+        pistolet: { damage: 15, range: 300, cooldown: 200, ammo: 50, maxAmmo: 50, speed: 12, color: '#fbbf24' },
+        fusil: { damage: 30, range: 400, cooldown: 400, ammo: 40, maxAmmo: 40, speed: 14, color: '#f87171' },
+        sniper: { damage: 80, range: 700, cooldown: 700, ammo: 20, maxAmmo: 20, speed: 20, color: '#4ade80' }
+    };
+    let weaponAmmo = weapons.pistolet.maxAmmo;
+    let isReloading = false, reloadTimer = 0;
+    const RELOAD_TIME = 1500;
+    let gameStarted = false;
+    let gameTime = 0.3;
+    const DAY_LENGTH = 120000;
+
+    let comboCount = 0;
+    let comboTimer = 0;
+    const COMBO_TIMEOUT = 3000;
+
+    const achievements = {
+        firstBlood: { icon: '🥇', name: 'Premier Sang', desc: 'Tuer 1 ennemi', unlocked: false },
+        combo5: { icon: '🔥', name: 'En Feu', desc: 'Combo x5', unlocked: false },
+        sniper10: { icon: '🎯', name: 'Sniper Élite', desc: '10 kills au sniper', unlocked: false },
+        veteran: { icon: '🎖️', name: 'Vétéran', desc: 'Atteindre le niveau 5', unlocked: false },
+        rich: { icon: '💰', name: 'Riche', desc: 'Avoir 50 000$', unlocked: false },
+        survivor: { icon: '💀', name: 'Survivant', desc: 'Survivre 5 min', unlocked: false },
+        copKiller: { icon: '🚔', name: 'Anti-Police', desc: 'Détruire 5 voitures de police', unlocked: false },
+        speedster: { icon: '⚡', name: 'Speedster', desc: 'Voler 10 voitures', unlocked: false }
+    };
+    let sniperKills = 0;
+    let policeKills = 0;
+    let carsStolen = 0;
+    let gameStartTime = 0;
+
+    let bloodStains = [];
+    let armor = 0;
+    let speedBoost = 0;
+
+    let weather = 'clear';
+    let weatherTimer = 0;
+    let rainDrops = [];
+    let lightningFlash = 0;
+
+    const player = {
+        x: W/2, y: H/2, radius: 14, speed: 3.2, angle: 0,
+        dx: 0, dy: 0, shootCooldown: 0, invincible: 0,
+        inVehicle: false, vehicleType: null, vehicleIndex: -1
+    };
+
+    let enemies = [], bullets = [], particles = [], buildings = [], vehicles = [];
+    let pickups = [], npcs = [], shops = [], policeCars = [], missionTargets = [];
+    let escapeCars = [];
+    let currentMission = null;
+    let allies = [];
+
+    const keys = {};
+    let mouseX = W/2, mouseY = H/2;
+    let joystickActive = false, joystickX = 0, joystickY = 0;
+    let isMobile = false;
+
+    function showNotification(text) {
+        const notif = document.getElementById('notification');
+        notif.textContent = text;
+        notif.classList.add('show');
+        setTimeout(() => notif.classList.remove('show'), 2000);
+    }
+
+    function unlockAchievement(id) {
+        if (achievements[id] && !achievements[id].unlocked) {
+            achievements[id].unlocked = true;
+            playAchievementSound();
+            const popup = document.getElementById('achievementPopup');
+            popup.innerHTML = `<div style="font-size:1.5rem;margin-bottom:4px;">${achievements[id].icon} SUCCÈS DÉBLOQUÉ</div><div>${achievements[id].name}</div><div style="font-size:11px;opacity:0.8;">${achievements[id].desc}</div>`;
+            popup.classList.remove('show');
+            void popup.offsetWidth;
+            popup.classList.add('show');
+            setTimeout(() => popup.classList.remove('show'), 4000);
+        }
+    }
+
+    function renderAchievements() {
+        const list = document.getElementById('achievementsList');
+        let html = '';
+        for (const [id, a] of Object.entries(achievements)) {
+            html += `<div class="achievement-item ${a.unlocked ? '' : 'locked'}">
+                <div class="icon">${a.icon}</div>
+                <div><div class="name">${a.name}</div><div class="desc">${a.desc}</div></div>
+                <div style="margin-left:auto;color:${a.unlocked ? '#4ade80' : '#666'};">${a.unlocked ? '✅' : '🔒'}</div>
+            </div>`;
+        }
+        list.innerHTML = html;
+    }
+
+    function saveGame() {
+        try {
+            const data = { money, health, kills, level, wantedLevel, currentWeapon, currentDifficulty,
+                unlockedAchievements: Object.keys(achievements).filter(k => achievements[k].unlocked),
+                sniperKills, policeKills, carsStolen };
+            localStorage.setItem('josueGTA_save', JSON.stringify(data));
+            showNotification("💾 Partie sauvegardée !");
+        } catch(e) { showNotification("❌ Erreur de sauvegarde"); }
+    }
+
+    function loadGame() {
+        try {
+            const s = localStorage.getItem('josueGTA_save');
+            if (!s) return false;
+            const data = JSON.parse(s);
+            money = data.money || 5000;
+            health = data.health || 100;
+            kills = data.kills || 0;
+            level = data.level || 1;
+            wantedLevel = data.wantedLevel || 0;
+            currentWeapon = (data.currentWeapon && weapons[data.currentWeapon]) ? data.currentWeapon : 'pistolet';
+            weaponAmmo = weapons[currentWeapon].maxAmmo;
+            sniperKills = data.sniperKills || 0;
+            policeKills = data.policeKills || 0;
+            carsStolen = data.carsStolen || 0;
+
+            if (data.currentDifficulty && DIFFICULTY_PRESETS[data.currentDifficulty]) {
+                currentDifficulty = data.currentDifficulty;
+                difficulty = DIFFICULTY_PRESETS[currentDifficulty];
+                document.querySelectorAll('.diff-btn').forEach(b => {
+                    b.classList.toggle('active', b.dataset.diff === currentDifficulty);
+                });
+                document.getElementById('diffDesc').textContent = difficulty.desc;
+            }
+
+            if (data.unlockedAchievements) data.unlockedAchievements.forEach(id => { if (achievements[id]) achievements[id].unlocked = true; });
+            showNotification("✅ Sauvegarde chargée !");
+            return true;
+        } catch(e) { return false; }
+    }
+
+    function autoSave() {
+        try {
+            const data = { money, health, kills, level, wantedLevel, currentWeapon, currentDifficulty,
+                unlockedAchievements: Object.keys(achievements).filter(k => achievements[k].unlocked),
+                sniperKills, policeKills, carsStolen };
+            localStorage.setItem('josueGTA_save', JSON.stringify(data));
+        } catch(e) {}
+    }
+
+    function generateCity() {
+        buildings = [];
+        const bColors = ['#1a2a4a','#2a3a5a','#1a3a4a','#2a4a6a','#3a3a5a','#1a2a3a'];
+        for (let i = 0; i < 45; i++) {
+            let x, y, w, h, ok, att = 0;
+            do {
+                w = 25 + Math.random() * 80; h = 25 + Math.random() * 80;
+                x = 15 + Math.random() * (W - w - 30); y = 15 + Math.random() * (H - h - 30);
+                ok = true;
+                for (const b of buildings) if (x < b.x + b.w + 8 && x + w + 8 > b.x && y < b.y + b.h + 8 && y + h + 8 > b.y) { ok = false; break; }
+                if (Math.abs(x + w/2 - player.x) < 80 && Math.abs(y + h/2 - player.y) < 80) ok = false;
+                att++;
+            } while (!ok && att < 50);
+            if (ok) buildings.push({ x, y, w, h, color: bColors[Math.floor(Math.random() * bColors.length)] });
+        }
+
+        vehicles = [];
+        const vTypes = ['car','car','moto','moto','moto','avion'];
+        const vColors = ['#ef4444','#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f472b6'];
+        for (let i = 0; i < 18; i++) {
+            let x, y, ok, att = 0;
+            const type = vTypes[Math.floor(Math.random() * vTypes.length)];
+            const w = type === 'car' ? 36 : (type === 'moto' ? 24 : 50);
+            const h = type === 'car' ? 18 : (type === 'moto' ? 12 : 25);
+            do {
+                x = 20 + Math.random() * (W - w - 40); y = 20 + Math.random() * (H - h - 40);
+                ok = true;
+                for (const b of buildings) if (x < b.x + b.w + 15 && x + w + 15 > b.x && y < b.y + b.h + 15 && y + h + 15 > b.y) { ok = false; break; }
+                if (Math.abs(x + w/2 - player.x) < 60 && Math.abs(y + h/2 - player.y) < 60) ok = false;
+                att++;
+            } while (!ok && att < 30);
+            if (ok) {
+                const speed = type === 'avion' ? 0.6 + Math.random() * 0.4 : 0.2 + Math.random() * 0.3;
+                vehicles.push({ x, y, w, h, type, color: vColors[Math.floor(Math.random() * vColors.length)], speed, dir: Math.random() * Math.PI * 2, active: true, occupied: false, health: type === 'avion' ? 80 : 50, explodeOnDeath: true });
+            }
+        }
+
+        escapeCars = [];
+        const escapeTypes = [
+            { name: 'Sport', color: '#ef4444', speed: 3.5, w: 38, h: 18 },
+            { name: 'Berline', color: '#3b82f6', speed: 2.5, w: 36, h: 18 },
+            { name: 'Moto Rapide', color: '#a855f7', speed: 4.0, w: 26, h: 12 },
+            { name: 'Moto Sport', color: '#f97316', speed: 4.2, w: 26, h: 12 },
+            { name: 'Moto Cross', color: '#22c55e', speed: 3.8, w: 26, h: 12 }
+        ];
+        for (let i = 0; i < 10; i++) {
+            let x, y, ok, att = 0;
+            const t = escapeTypes[Math.floor(Math.random() * escapeTypes.length)];
+            do {
+                x = 40 + Math.random() * (W - 80); y = 40 + Math.random() * (H - 80);
+                ok = true;
+                for (const b of buildings) if (x < b.x + b.w + 20 && x + t.w + 20 > b.x && y < b.y + b.h + 20 && y + t.h + 20 > b.y) { ok = false; break; }
+                if (Math.abs(x - player.x) < 80 && Math.abs(y - player.y) < 80) ok = false;
+                att++;
+            } while (!ok && att < 40);
+            if (ok) escapeCars.push({ x, y, w: t.w, h: t.h, color: t.color, name: t.name, speed: t.speed, dir: Math.random() * Math.PI * 2, occupied: false, active: true });
+        }
+
+        npcs = [];
+        for (let i = 0; i < 25; i++) {
+            let x, y, ok, att = 0;
+            do {
+                x = 10 + Math.random() * (W - 20); y = 10 + Math.random() * (H - 20);
+                ok = true;
+                for (const b of buildings) if (x < b.x + b.w + 5 && x + 10 > b.x && y < b.y + b.h + 5 && y + 10 > b.y) { ok = false; break; }
+                att++;
+            } while (!ok && att < 20);
+            if (ok) npcs.push({ x, y, radius: 8, speed: 0.2 + Math.random() * 0.3, dir: Math.random() * Math.PI * 2, color: `hsl(${Math.random() * 60 + 20}, 40%, ${50 + Math.random() * 30}%)`, timer: 0, recruitable: Math.random() < 0.3 });
+        }
+
+        shops = [];
+        for (let i = 0; i < 4; i++) {
+            let x, y, ok, att = 0;
+            do {
+                x = 50 + Math.random() * (W - 100); y = 50 + Math.random() * (H - 100);
+                ok = true;
+                for (const b of buildings) if (x < b.x + b.w + 20 && x + 40 > b.x && y < b.y + b.h + 20 && y + 40 > b.y) { ok = false; break; }
+                att++;
+            } while (!ok && att < 30);
+            if (ok) shops.push({ x, y, w: 40, h: 40, icon: '🏪' });
+        }
+
+        rainDrops = [];
+        for (let i = 0; i < 200; i++) {
+            rainDrops.push({ x: Math.random() * W, y: Math.random() * H, len: 10 + Math.random() * 15, speed: 15 + Math.random() * 10 });
+        }
+    }
+
+    // ⚙️ FONCTION CORRIGÉE AVEC DIFFICULTÉ
+    function spawnEnemy() {
+        const side = Math.floor(Math.random() * 4);
+        let x, y;
+        if (side === 0) { x = -20; y = Math.random() * H; }
+        else if (side === 1) { x = W + 20; y = Math.random() * H; }
+        else if (side === 2) { x = Math.random() * W; y = -20; }
+        else { x = Math.random() * W; y = H + 20; }
+        const hm = 1 + (level - 1) * 0.15;
+        const baseHp = 30 * hm * difficulty.enemyHpMult;
+        const baseDmg = (8 + level * 1.5) * difficulty.enemyDamageMult;
+        const baseSpeed = (0.6 + level * 0.08) * difficulty.enemySpeedMult;
+        enemies.push({
+            x, y, radius: 12, speed: baseSpeed,
+            hp: Math.floor(baseHp), maxHp: Math.floor(baseHp),
+            damage: baseDmg, attackRange: 120 + level * 5,
+            state: 'chase', color: `hsl(${Math.random() * 20 + 340}, 70%, 50%)`,
+            shootCooldown: 0, angle: 0, hitFlash: 0
+        });
+    }
+    let enemySpawnTimer = 0;
+
+    // ⚙️ FONCTION CORRIGÉE (au lieu de const MAX_ENEMIES)
+    function getMaxEnemies() {
+        return Math.floor((10 + level * 2) * difficulty.maxEnemiesMult);
+    }
+
+    function spawnPoliceCar() {
+        const side = Math.floor(Math.random() * 4);
+        let x, y;
+        if (side === 0) { x = -30; y = Math.random() * H; }
+        else if (side === 1) { x = W + 30; y = Math.random() * H; }
+        else if (side === 2) { x = Math.random() * W; y = -30; }
+        else { x = Math.random() * W; y = H + 30; }
+        policeCars.push({ x, y, w: 36, h: 18, speed: 2.5 + wantedLevel * 0.3, hp: 60 + wantedLevel * 20, maxHp: 60 + wantedLevel * 20, shootCooldown: 0, dir: 0, burning: 0 });
+    }
+
+    function spawnParticles(x, y, color, count = 20) {
+        for (let i = 0; i < count; i++) {
+            const a = Math.random() * Math.PI * 2, s = 1 + Math.random() * 4;
+            particles.push({ x, y, dx: Math.cos(a) * s, dy: Math.sin(a) * s, life: 30 + Math.random() * 30, maxLife: 60, radius: 2 + Math.random() * 4, color });
+        }
+    }
+
+    function spawnBlood(x, y) {
+        bloodStains.push({ x, y, radius: 6 + Math.random() * 10, alpha: 0.6, life: 30000 });
+    }
+
+    function explodeVehicle(x, y, radius = 100) {
+        spawnParticles(x, y, '#fbbf24', 50);
+        spawnParticles(x, y, '#ef4444', 40);
+        playExplosionSound();
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const e = enemies[i];
+            if (Math.hypot(e.x - x, e.y - y) < radius) {
+                e.hp -= 100; e.hitFlash = 10; spawnBlood(e.x, e.y);
+                if (e.hp <= 0) { kills++; money += 50 + level * 20; spawnPickup(e.x, e.y, 'money'); enemies.splice(i, 1); }
+            }
+        }
+        const pd = Math.hypot(player.x - x, player.y - y);
+        if (pd < radius && player.invincible <= 0) {
+            health -= 30 * difficulty.playerDamageTaken; player.invincible = 500;
+            if (health <= 0) { health = 0; respawnPlayer(); }
+        }
+        for (let i = policeCars.length - 1; i >= 0; i--) {
+            const p = policeCars[i];
+            if (Math.hypot(p.x - x, p.y - y) < radius) {
+                p.hp -= 100;
+                if (p.hp <= 0) { policeKills++; spawnParticles(p.x, p.y, '#3b82f6', 30); policeCars.splice(i, 1); if (policeKills >= 5) unlockAchievement('copKiller'); }
+            }
+        }
+    }
+
+    function spawnMoneyPickup(x, y, amount) { pickups.push({ x, y, radius: 8, amount, life: 300, type: 'money', bob: 0 }); }
+    function spawnHealthPickup(x, y) { pickups.push({ x, y, radius: 10, amount: 20 + Math.floor(Math.random() * 30), life: 250, type: 'health', bob: 0 }); }
+    function spawnArmorPickup(x, y) { pickups.push({ x, y, radius: 10, amount: 50, life: 300, type: 'armor', bob: 0 }); }
+    function spawnSpeedPickup(x, y) { pickups.push({ x, y, radius: 10, amount: 10000, life: 300, type: 'speed', bob: 0 }); }
+    function spawnBombPickup(x, y) { pickups.push({ x, y, radius: 12, amount: 0, life: 400, type: 'bomb', bob: 0 }); }
+
+    function spawnPickup(x, y, forcedType) {
+        const types = ['money', 'health', 'armor', 'speed', 'bomb'];
+        const type = forcedType || types[Math.floor(Math.random() * types.length)];
+        if (type === 'money') spawnMoneyPickup(x, y, 50 + Math.floor(Math.random() * 100));
+        else if (type === 'health') spawnHealthPickup(x, y);
+        else if (type === 'armor') spawnArmorPickup(x, y);
+        else if (type === 'speed') spawnSpeedPickup(x, y);
+        else if (type === 'bomb') spawnBombPickup(x, y);
+    }
+
+    function shoot() {
+        if (isReloading || player.shootCooldown > 0) return;
+        if (weaponAmmo <= 0) { startReload(); return; }
+        const w = weapons[currentWeapon];
+        const angle = player.angle;
+        const spread = currentWeapon === 'fusil' ? 0.08 : 0.02;
+        bullets.push({
+            x: player.x + Math.cos(angle) * 25, y: player.y + Math.sin(angle) * 25,
+            dx: Math.cos(angle + (Math.random() - 0.5) * spread) * w.speed,
+            dy: Math.sin(angle + (Math.random() - 0.5) * spread) * w.speed,
+            damage: w.damage, range: w.range, distance: 0, radius: 3, color: w.color, life: 60, isEnemy: false
+        });
+        weaponAmmo--; player.shootCooldown = w.cooldown;
+        spawnParticles(player.x + Math.cos(angle) * 25, player.y + Math.sin(angle) * 25, '#fbbf24', 5);
+        playShootSound();
+        if (weaponAmmo <= 0) startReload();
+    }
+    function startReload() {
+        if (isReloading || weaponAmmo === weapons[currentWeapon].maxAmmo) return;
+        isReloading = true; reloadTimer = 0;
+    }
+
+    function addCombo() {
+        comboCount++;
+        comboTimer = COMBO_TIMEOUT;
+        if (comboCount > 1) {
+            const popup = document.getElementById('comboPopup');
+            popup.textContent = `x${comboCount} COMBO!`;
+            popup.classList.remove('show');
+            void popup.offsetWidth;
+            popup.classList.add('show');
+            if (comboCount >= 5) unlockAchievement('combo5');
+        }
+    }
+
+    function enterVehicle() {
+        if (player.inVehicle) {
+            const isEscape = player.vehicleType === 'escape';
+            const v = isEscape ? escapeCars[player.vehicleIndex] : vehicles[player.vehicleIndex];
+            if (v) v.occupied = false;
+            player.inVehicle = false; player.vehicleType = null; player.vehicleIndex = -1;
+            document.getElementById('vehicleDisplay').textContent = 'À pied';
+            return;
+        }
+        for (let i = 0; i < escapeCars.length; i++) {
+            const v = escapeCars[i];
+            if (!v.active || v.occupied) continue;
+            if (Math.hypot(player.x - v.x, player.y - v.y) < 45) {
+                player.inVehicle = true; player.vehicleType = 'escape'; player.vehicleIndex = i;
+                v.occupied = true;
+                document.getElementById('vehicleDisplay').textContent = '🏍️ ' + v.name + ' (FUITE)';
+                player.x = v.x; player.y = v.y;
+                carsStolen++;
+                if (carsStolen >= 10) unlockAchievement('speedster');
+                showNotification("🏍️ " + v.name + " volée !");
+                return;
+            }
+        }
+        for (let i = 0; i < vehicles.length; i++) {
+            const v = vehicles[i];
+            if (!v.active || v.occupied) continue;
+            if (Math.hypot(player.x - v.x, player.y - v.y) < 40) {
+                player.inVehicle = true; player.vehicleType = v.type; player.vehicleIndex = i;
+                v.occupied = true;
+                document.getElementById('vehicleDisplay').textContent = v.type === 'car' ? '🚗 Voiture' : (v.type === 'moto' ? '🏍️ Moto' : '✈️ Avion');
+                player.x = v.x; player.y = v.y;
+                carsStolen++;
+                if (carsStolen >= 10) unlockAchievement('speedster');
+                return;
+            }
+        }
+    }
+
+    function tryToBuy() {
+        let nearShop = null;
+        for (const s of shops) if (Math.hypot(player.x - s.x, player.y - s.y) < 50) { nearShop = s; break; }
+        if (!nearShop) { showNotification("🏪 Aucune boutique à proximité"); return; }
+        const choice = prompt("🏪 BOUTIQUE OBANYS\n\n1. ❤️ Santé complète (50$)\n2. 🛡️ Armure complète (75$)\n3. 🔫 Munitions (30$)\n4. 🎯 Fusil (200$)\n5. 🎯 Sniper (500$)\n6. 💥 3 Bombes (300$)\n\nEntrez un numéro (1-6) :");
+        if (choice === '1') { if (money >= 50) { money -= 50; health = 100; playHealthSound(); showNotification("❤️ Santé restaurée !"); } else showNotification("❌ Pas assez"); }
+        else if (choice === '2') { if (money >= 75) { money -= 75; armor = 100; playHealthSound(); showNotification("🛡️ Armure activée !"); } else showNotification("❌ Pas assez"); }
+        else if (choice === '3') { if (money >= 30) { money -= 30; weaponAmmo = weapons[currentWeapon].maxAmmo; playMoneySound(); showNotification("🔫 Rechargé !"); } else showNotification("❌ Pas assez"); }
+        else if (choice === '4') { if (money >= 200) { money -= 200; currentWeapon = 'fusil'; weaponAmmo = weapons.fusil.maxAmmo; playMoneySound(); showNotification("🎯 Fusil acheté !"); } else showNotification("❌ Pas assez"); }
+        else if (choice === '5') { if (money >= 500) { money -= 500; currentWeapon = 'sniper'; weaponAmmo = weapons.sniper.maxAmmo; playMoneySound(); showNotification("🎯 Sniper acheté !"); } else showNotification("❌ Pas assez"); }
+        else if (choice === '6') { if (money >= 300) { money -= 300; spawnBombPickup(player.x + 30, player.y); spawnBombPickup(player.x - 30, player.y); spawnBombPickup(player.x, player.y + 30); playMoneySound(); showNotification("💥 3 Bombes placées !"); } else showNotification("❌ Pas assez"); }
+    }
+
+    function recruitAlly() {
+        for (const npc of npcs) {
+            if (!npc.recruitable || npc.allied) continue;
+            if (Math.hypot(npc.x - player.x, npc.y - player.y) < 50) {
+                npc.allied = true;
+                allies.push(npc);
+                showNotification("👥 Allié recruté !");
+                return true;
+            }
+        }
+        showNotification("❌ Aucun allié à recruter");
+        return false;
+    }
+
+    function startRandomMission() {
+        const missions = [
+            { type: 'deliver', text: '🚗 Livrez un véhicule au point marqué', reward: 500 },
+            { type: 'protect', text: '🛡️ Protégez le PNJ pendant 30s', reward: 800 },
+            { type: 'package', text: '📦 Livrez le colis au point marqué', reward: 1000 }
+        ];
+        const m = missions[Math.floor(Math.random() * missions.length)];
+        currentMission = m;
+        const tx = 100 + Math.random() * (W - 200), ty = 100 + Math.random() * (H - 200);
+        missionTargets = [{ x: tx, y: ty, radius: 25, type: m.type }];
+        document.getElementById('missionBox').textContent = m.text;
+        showNotification("🏆 Mission : " + m.text);
+    }
+
+    function update() {
+        if (!gameStarted) return;
+        gameTime += 16 / DAY_LENGTH;
+        if (gameTime > 1) gameTime -= 1;
+
+        // ⚙️ AUTO-HEAL EN MODE FACILE
+        if (difficulty.autoHeal && health > 0 && health < 100) {
+            autoHealAccumulator += 16;
+            if (autoHealAccumulator >= 1000) {
+                health = Math.min(100, health + 2);
+                autoHealAccumulator = 0;
+            }
+        }
+
+        if (comboTimer > 0) {
+            comboTimer -= 16;
+            if (comboTimer <= 0) { comboCount = 0; document.getElementById('comboDisplay').textContent = ''; }
+            else if (comboCount > 1) document.getElementById('comboDisplay').textContent = `🔥 x${comboCount}`;
+        }
+
+        if (speedBoost > 0) speedBoost -= 16;
+
+        weatherTimer += 16;
+        if (weatherTimer > 20000 + Math.random() * 20000) {
+            const weathers = ['clear', 'clear', 'rain', 'storm', 'fog'];
+            weather = weathers[Math.floor(Math.random() * weathers.length)];
+            weatherTimer = 0;
+            if (weather === 'rain') showNotification("🌧️ Il pleut...");
+            else if (weather === 'storm') showNotification("⛈️ Orage !");
+            else if (weather === 'fog') showNotification("🌫️ Brouillard...");
+        }
+        if (weather === 'storm' && Math.random() < 0.005) lightningFlash = 200;
+
+        if (isReloading) { reloadTimer += 16; if (reloadTimer >= RELOAD_TIME) { weaponAmmo = weapons[currentWeapon].maxAmmo; isReloading = false; } }
+        if (player.shootCooldown > 0) player.shootCooldown -= 16;
+        if (player.invincible > 0) player.invincible -= 16;
+        if (lightningFlash > 0) lightningFlash -= 16;
+
+        if (wantedLevel > 0) {
+            wantedTimer += 16;
+            if (wantedTimer > 15000 && enemies.length === 0 && policeCars.length === 0) {
+                wantedLevel = Math.max(0, wantedLevel - 1); wantedTimer = 0;
+                if (wantedLevel === 0) showNotification("✅ Recherché terminé");
+            }
+        }
+        document.getElementById('wantedDisplay').textContent = '⭐ ' + wantedLevel;
+        // ⚙️ POLICE SPAWN SELON DIFFICULTÉ
+        if (wantedLevel > 0 && policeCars.length < wantedLevel * 2 && Math.random() < difficulty.policeSpawnRate) spawnPoliceCar();
+
+        let speedMult = 1;
+        if (speedBoost > 0) speedMult = 1.5;
+        if (weather === 'rain' || weather === 'storm') speedMult *= 0.85;
+
+        let dx = 0, dy = 0;
+        if (keys['ArrowUp'] || keys['w'] || keys['z']) dy = -player.speed * speedMult;
+        if (keys['ArrowDown'] || keys['s']) dy = player.speed * speedMult;
+        if (keys['ArrowLeft'] || keys['a'] || keys['q']) dx = -player.speed * speedMult;
+        if (keys['ArrowRight'] || keys['d']) dx = player.speed * speedMult;
+        if ((isMobile || phoneMode) && (joystickX !== 0 || joystickY !== 0)) {
+            dx = joystickX * player.speed * speedMult;
+            dy = joystickY * player.speed * speedMult;
+        }
+        if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
+
+        if (player.inVehicle) {
+            const isEscape = player.vehicleType === 'escape';
+            const v = isEscape ? escapeCars[player.vehicleIndex] : vehicles[player.vehicleIndex];
+            if (v) {
+                const spd = isEscape ? v.speed : (v.type === 'avion' ? 2.5 : (v.type === 'moto' ? 2.5 : 1.5));
+                let nx = v.x + dx * spd, ny = v.y + dy * spd;
+                let canMove = true;
+                for (const b of buildings) if (nx > b.x - v.w/2 - 5 && nx < b.x + b.w + v.w/2 + 5 && ny > b.y - v.h/2 - 5 && ny < b.y + b.h + v.h/2 + 5) { canMove = false; break; }
+                if (canMove) {
+                    v.x = Math.max(v.w/2, Math.min(W - v.w/2, nx));
+                    v.y = Math.max(v.h/2, Math.min(H - v.h/2, ny));
+                    player.x = v.x; player.y = v.y;
+                    if (dx !== 0 || dy !== 0) { v.dir = Math.atan2(dy, dx); player.angle = v.dir; }
+                }
+            }
+        } else {
+            player.dx += (dx - player.dx) * 0.15; player.dy += (dy - player.dy) * 0.15;
+            let nx = player.x + player.dx, ny = player.y + player.dy;
+            let canMove = true;
+            for (const b of buildings) if (nx > b.x - 10 && nx < b.x + b.w + 10 && ny > b.y - 10 && ny < b.y + b.h + 10) { canMove = false; break; }
+            if (canMove) { player.x = Math.max(10, Math.min(W - 10, nx)); player.y = Math.max(10, Math.min(H - 10, ny)); }
+        }
+
+        const dxM = mouseX - player.x, dyM = mouseY - player.y;
+        if (Math.abs(dxM) > 2 || Math.abs(dyM) > 2) player.angle = Math.atan2(dyM, dxM);
+
+        if (keys[' '] || keys['Space']) shoot();
+        if (keys['1']) { currentWeapon = 'pistolet'; weaponAmmo = weapons.pistolet.maxAmmo; isReloading = false; }
+        if (keys['2']) { currentWeapon = 'fusil'; weaponAmmo = weapons.fusil.maxAmmo; isReloading = false; }
+        if (keys['3']) { currentWeapon = 'sniper'; weaponAmmo = weapons.sniper.maxAmmo; isReloading = false; }
+        if (keys['r'] || keys['R']) startReload();
+        if (keys['e'] || keys['E']) { enterVehicle(); keys['e'] = false; keys['E'] = false; }
+        if (keys['f'] || keys['F']) { tryToBuy(); keys['f'] = false; keys['F'] = false; }
+        if (keys['t'] || keys['T']) { document.getElementById('achievementsPanel').classList.toggle('show'); renderAchievements(); keys['t'] = false; keys['T'] = false; }
+        if (keys['p'] || keys['P']) { saveGame(); keys['p'] = false; keys['P'] = false; }
+        if (keys['g'] || keys['G']) { recruitAlly(); keys['g'] = false; keys['G'] = false; }
+        if (keys['n'] || keys['N']) { nextMusic(); keys['n'] = false; keys['N'] = false; }
+
+        // Balles
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            const b = bullets[i];
+            b.x += b.dx; b.y += b.dy; b.distance += Math.hypot(b.dx, b.dy); b.life--;
+            let remove = false;
+            if (b.distance > b.range || b.life <= 0) remove = true;
+            for (const bd of buildings) if (b.x > bd.x && b.x < bd.x + bd.w && b.y > bd.y && b.y < bd.y + bd.h) { spawnParticles(b.x, b.y, '#888', 8); remove = true; break; }
+
+            if (!remove) for (const v of vehicles) if (v.active && b.x > v.x - v.w/2 && b.x < v.x + v.w/2 && b.y > v.y - v.h/2 && b.y < v.y + v.h/2) {
+                spawnParticles(b.x, b.y, v.color, 12);
+                v.health -= b.damage * 0.3;
+                if (v.health <= 0) { v.active = false; explodeVehicle(v.x, v.y, 100); }
+                remove = true; break;
+            }
+
+            if (!remove && !b.isEnemy) {
+                for (let j = policeCars.length - 1; j >= 0; j--) {
+                    const p = policeCars[j];
+                    if (b.x > p.x - p.w/2 && b.x < p.x + p.w/2 && b.y > p.y - p.h/2 && b.y < p.y + p.h/2) {
+                        p.hp -= b.damage;
+                        p.burning = 2000;
+                        spawnParticles(b.x, b.y, '#fbbf24', 15);
+                        spawnParticles(b.x, b.y, '#ef4444', 10);
+                        playHitSound();
+                        remove = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!remove && !b.isEnemy) for (let j = enemies.length - 1; j >= 0; j--) {
+                const e = enemies[j];
+                if (Math.hypot(b.x - e.x, b.y - e.y) < e.radius + b.radius) {
+                    e.hp -= b.damage; e.hitFlash = 10;
+                    spawnParticles(e.x, e.y, '#f87171', 12);
+                    spawnBlood(e.x, e.y);
+                    if (e.hp <= 0) {
+                        kills++;
+                        const comboMult = Math.max(1, comboCount);
+                        // ⚙️ ARGENT SELON DIFFICULTÉ
+                        const r = Math.floor((50 + level * 20) * comboMult * difficulty.moneyMult);
+                        money += r;
+                        spawnMoneyPickup(e.x, e.y, r);
+                        if (Math.random() < 0.15) spawnHealthPickup(e.x, e.y);
+                        if (Math.random() < 0.1) spawnArmorPickup(e.x, e.y);
+                        if (Math.random() < 0.08) spawnSpeedPickup(e.x, e.y);
+                        if (Math.random() < 0.05) spawnBombPickup(e.x, e.y);
+                        spawnBlood(e.x, e.y);
+                        spawnParticles(e.x, e.y, '#fbbf24', 30);
+                        playMoneySound();
+                        addCombo();
+                        if (currentWeapon === 'sniper') sniperKills++;
+                        if (kills === 1) unlockAchievement('firstBlood');
+                        if (sniperKills >= 10) unlockAchievement('sniper10');
+                        enemies.splice(j, 1);
+                        wantedLevel = Math.min(5, wantedLevel + 1); wantedTimer = 0;
+                    }
+                    remove = true; break;
+                }
+            }
+            if (!remove && b.isEnemy) {
+                if (Math.hypot(b.x - player.x, b.y - player.y) < player.radius + b.radius && player.invincible <= 0) {
+                    // ⚙️ DÉGÂTS SELON DIFFICULTÉ
+                    const dmg = b.damage * difficulty.playerDamageTaken;
+                    if (armor > 0) {
+                        armor -= dmg;
+                        if (armor < 0) { health += armor; armor = 0; }
+                        spawnParticles(player.x, player.y, '#60a5fa', 15);
+                    } else {
+                        health -= dmg;
+                        spawnParticles(player.x, player.y, '#f87171', 15);
+                    }
+                    player.invincible = 500;
+                    if (health <= 0) { health = 0; respawnPlayer(); }
+                    remove = true;
+                }
+            }
+            if (remove) bullets.splice(i, 1);
+        }
+
+        enemySpawnTimer += 16;
+        // ⚙️ SPAWN SELON DIFFICULTÉ
+        if (enemySpawnTimer > difficulty.enemySpawnRate - level * 80 && enemies.length < getMaxEnemies()) { spawnEnemy(); enemySpawnTimer = 0; }
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const e = enemies[i];
+            if (e.hitFlash > 0) e.hitFlash--;
+            const dist = Math.hypot(e.x - player.x, e.y - player.y);
+            const ang = Math.atan2(player.y - e.y, player.x - e.x);
+            e.angle = ang;
+            e.state = dist < e.attackRange ? 'attack' : 'chase';
+            if (e.state === 'chase') { e.x += Math.cos(ang) * e.speed; e.y += Math.sin(ang) * e.speed; }
+            if (e.state === 'attack' && e.shootCooldown <= 0 && player.invincible <= 0) {
+                bullets.push({ x: e.x + Math.cos(ang) * 20, y: e.y + Math.sin(ang) * 20, dx: Math.cos(ang) * 3.5, dy: Math.sin(ang) * 3.5, damage: e.damage, range: 400, distance: 0, radius: 3, color: '#f87171', life: 60, isEnemy: true });
+                e.shootCooldown = 1000 + Math.random() * 500;
+            }
+            if (e.shootCooldown > 0) e.shootCooldown -= 16;
+            e.x = Math.max(10, Math.min(W - 10, e.x));
+            e.y = Math.max(10, Math.min(H - 10, e.y));
+        }
+
+        for (const ally of allies) {
+            let target = null;
+            let minD = 300;
+            for (const e of enemies) {
+                const d = Math.hypot(e.x - ally.x, e.y - ally.y);
+                if (d < minD) { minD = d; target = e; }
+            }
+            if (target) {
+                const ang = Math.atan2(target.y - ally.y, target.x - ally.x);
+                if (minD > 150) { ally.x += Math.cos(ang) * 2; ally.y += Math.sin(ang) * 2; }
+                if (Math.random() < 0.02) {
+                    bullets.push({ x: ally.x, y: ally.y, dx: Math.cos(ang) * 8, dy: Math.sin(ang) * 8, damage: 10, range: 300, distance: 0, radius: 2, color: '#4ade80', life: 60, isEnemy: false });
+                }
+            }
+        }
+
+        // 🚔 POLICE AMÉLIORÉE
+        for (let i = policeCars.length - 1; i >= 0; i--) {
+            const p = policeCars[i];
+
+            if (p.burning && p.burning > 0) {
+                p.burning -= 16;
+                if (Math.random() < 0.4) {
+                    particles.push({
+                        x: p.x + (Math.random() - 0.5) * 35,
+                        y: p.y + (Math.random() - 0.5) * 35,
+                        dx: (Math.random() - 0.5) * 2,
+                        dy: -1 - Math.random() * 3,
+                        life: 20 + Math.random() * 20,
+                        maxLife: 40,
+                        radius: 3 + Math.random() * 5,
+                        color: Math.random() < 0.5 ? '#fbbf24' : '#ef4444'
+                    });
+                }
+                p.hp -= 0.8;
+                if (Math.random() < 0.1) spawnParticles(p.x, p.y, '#ff6600', 8);
+            }
+
+            const dist = Math.hypot(p.x - player.x, p.y - player.y);
+            const ang = Math.atan2(player.y - p.y, player.x - p.x);
+            if (dist > 80) { p.x += Math.cos(ang) * p.speed; p.y += Math.sin(ang) * p.speed; }
+            p.dir = ang;
+            if (p.shootCooldown <= 0 && dist < 400 && player.invincible <= 0) {
+                bullets.push({ x: p.x + Math.cos(ang) * 20, y: p.y + Math.sin(ang) * 20, dx: Math.cos(ang) * 4, dy: Math.sin(ang) * 4, damage: 10, range: 500, distance: 0, radius: 3, color: '#3b82f6', life: 60, isEnemy: true });
+                p.shootCooldown = 1500;
+            }
+            if (p.shootCooldown > 0) p.shootCooldown -= 16;
+
+            if (p.hp <= 0) {
+                spawnParticles(p.x, p.y, '#3b82f6', 40);
+                spawnParticles(p.x, p.y, '#fbbf24', 30);
+                spawnParticles(p.x, p.y, '#ef4444', 30);
+                playExplosionSound();
+                policeKills++;
+                kills++;
+                money += Math.floor((100 + level * 30) * difficulty.moneyMult);
+                spawnMoneyPickup(p.x, p.y, Math.floor((100 + level * 30) * difficulty.moneyMult));
+                spawnBlood(p.x, p.y);
+                if (policeKills >= 5) unlockAchievement('copKiller');
+                policeCars.splice(i, 1);
+            }
+        }
+
+        for (const npc of npcs) {
+            if (npc.allied) continue;
+            npc.timer += 16;
+            if (npc.timer > 200 + Math.random() * 300) { npc.dir += (Math.random() - 0.5) * 1.5; npc.timer = 0; }
+            let flee = false;
+            for (const e of enemies) if (Math.hypot(npc.x - e.x, npc.y - e.y) < 60) { flee = true; const a = Math.atan2(npc.y - e.y, npc.x - e.x); npc.x += Math.cos(a) * 0.5; npc.y += Math.sin(a) * 0.5; break; }
+            if (!flee) { npc.x += Math.cos(npc.dir) * npc.speed; npc.y += Math.sin(npc.dir) * npc.speed; }
+            npc.x = Math.max(10, Math.min(W - 10, npc.x));
+            npc.y = Math.max(10, Math.min(H - 10, npc.y));
+        }
+
+        for (let i = pickups.length - 1; i >= 0; i--) {
+            const p = pickups[i]; p.bob += 0.05; p.life--;
+            if (Math.hypot(p.x - player.x, p.y - player.y) < p.radius + player.radius) {
+                if (p.type === 'money') { money += p.amount; playMoneySound(); }
+                else if (p.type === 'health') { health = Math.min(100, health + p.amount); playHealthSound(); }
+                else if (p.type === 'armor') { armor = Math.min(100, armor + p.amount); playHealthSound(); }
+                else if (p.type === 'speed') { speedBoost = p.amount; showNotification("⚡ Vitesse boostée !"); playMoneySound(); }
+                else if (p.type === 'bomb') { explodeVehicle(p.x, p.y, 150); }
+                spawnParticles(p.x, p.y, '#4ade80', 10);
+                pickups.splice(i, 1); continue;
+            }
+            if (p.life <= 0) pickups.splice(i, 1);
+        }
+
+        for (const v of vehicles) {
+            if (!v.active || v.occupied) continue;
+            v.x += Math.cos(v.dir) * v.speed * (weather === 'rain' || weather === 'storm' ? 0.7 : 1);
+            v.y += Math.sin(v.dir) * v.speed * (weather === 'rain' || weather === 'storm' ? 0.7 : 1);
+            if (v.x < 10 || v.x > W - 10 || v.y < 10 || v.y > H - 10) v.dir += Math.PI * 0.5;
+            v.x = Math.max(v.w/2, Math.min(W - v.w/2, v.x));
+            v.y = Math.max(v.h/2, Math.min(H - v.h/2, v.y));
+        }
+
+        for (let i = bloodStains.length - 1; i >= 0; i--) {
+            bloodStains[i].life -= 16;
+            if (bloodStains[i].life <= 0) bloodStains.splice(i, 1);
+            else bloodStains[i].alpha = Math.min(0.6, bloodStains[i].life / 30000 * 0.6);
+        }
+
+        if (!currentMission && Math.random() < 0.001) startRandomMission();
+        if (currentMission && missionTargets.length > 0) {
+            const t = missionTargets[0];
+            if (Math.hypot(player.x - t.x, player.y - t.y) < t.radius + player.radius) {
+                money += currentMission.reward;
+                showNotification("🏆 Mission accomplie ! +" + currentMission.reward + "$");
+                playLevelUpSound();
+                currentMission = null; missionTargets = [];
+                document.getElementById('missionBox').textContent = '🎯 En attente de mission...';
+            }
+        }
+
+        if (weather === 'rain' || weather === 'storm') {
+            for (const drop of rainDrops) {
+                drop.y += drop.speed;
+                drop.x -= 2;
+                if (drop.y > H) { drop.y = -10; drop.x = Math.random() * W; }
+                if (drop.x < 0) drop.x = W;
+            }
+        }
+
+        // ⚙️ HUD AVEC DIFFICULTÉ
+        document.getElementById('moneyDisplay').textContent = money;
+        document.getElementById('healthDisplay').textContent = Math.floor(health);
+        document.getElementById('healthBarFill').style.width = health + '%';
+        document.getElementById('levelDisplay').textContent = level;
+        document.getElementById('killsDisplay').textContent = kills;
+        document.getElementById('diffDisplay').textContent = difficulty.name;
+        document.getElementById('weaponDisplay').textContent = currentWeapon.charAt(0).toUpperCase() + currentWeapon.slice(1) + (isReloading ? ' 🔄' : ` (${weaponAmmo}/${weapons[currentWeapon].maxAmmo})`);
+
+        if (kills >= level * 5) {
+            level++;
+            playLevelUpSound();
+            showNotification("⭐ Niveau " + level + " !");
+            spawnParticles(player.x, player.y, '#fbbf24', 50);
+            if (level >= 5) unlockAchievement('veteran');
+        }
+        if (money >= 50000) unlockAchievement('rich');
+        if (Date.now() - gameStartTime > 300000) unlockAchievement('survivor');
+
+        frameCount++;
+        const now = performance.now();
+        if (now - lastFpsUpdate > 500) {
+            currentFps = Math.round(frameCount / ((now - lastFpsUpdate) / 1000));
+            frameCount = 0; lastFpsUpdate = now;
+            document.getElementById('fpsDisplay').textContent = `FPS: ${currentFps}`;
+        }
+
+        if (Date.now() - lastAutoSave > 30000) {
+            autoSave();
+            lastAutoSave = Date.now();
+        }
+    }
+    let frameCount = 0, lastFpsUpdate = 0, currentFps = 60;
+    let lastAutoSave = Date.now();
+
+    function respawnPlayer() {
+        showNotification("💀 Vous êtes mort ! -200$");
+        playExplosionSound();
+
+        player.x = W/2;
+        player.y = H/2;
+        player.dx = 0;
+        player.dy = 0;
+
+        health = 100;
+        player.invincible = 2000;
+        armor = 0;
+        speedBoost = 0;
+
+        money = Math.max(0, money - 200);
+
+        if (player.inVehicle) {
+            const isEscape = player.vehicleType === 'escape';
+            const v = isEscape ? escapeCars[player.vehicleIndex] : vehicles[player.vehicleIndex];
+            if (v) v.occupied = false;
+            player.inVehicle = false;
+            player.vehicleType = null;
+            player.vehicleIndex = -1;
+            document.getElementById('vehicleDisplay').textContent = 'À pied';
+        }
+
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const e = enemies[i];
+            if (Math.hypot(e.x - player.x, e.y - player.y) < 250) {
+                spawnParticles(e.x, e.y, '#f87171', 20);
+                enemies.splice(i, 1);
+            }
+        }
+
+        for (let i = policeCars.length - 1; i >= 0; i--) {
+            const p = policeCars[i];
+            if (Math.hypot(p.x - player.x, p.y - player.y) < 300) {
+                spawnParticles(p.x, p.y, '#3b82f6', 20);
+                policeCars.splice(i, 1);
+            }
+        }
+
+        wantedLevel = 0;
+        wantedTimer = 0;
+
+        spawnParticles(player.x, player.y, '#4ade80', 50);
+        spawnParticles(player.x, player.y, '#60a5fa', 30);
+
+        setTimeout(() => {
+            playLevelUpSound();
+            showNotification("✨ Réapparition !");
+        }, 500);
+    }
+
+    function getSkyColor() {
+        const t = gameTime;
+        let r, g, b;
+        if (t < 0.25) { const p = t / 0.25; r = 10 + p * 200; g = 15 + p * 150; b = 40 + p * 100; }
+        else if (t < 0.5) { const p = (t - 0.25) / 0.25; r = 210 - p * 50; g = 165 + p * 50; b = 140 - p * 50; }
+        else if (t < 0.75) { const p = (t - 0.5) / 0.25; r = 160 + p * 60; g = 215 - p * 100; b = 90 + p * 30; }
+        else { const p = (t - 0.75) / 0.25; r = 220 - p * 210; g = 115 - p * 100; b = 120 - p * 80; }
+        return `rgb(${Math.floor(Math.max(0, Math.min(255, r)))},${Math.floor(Math.max(0, Math.min(255, g)))},${Math.floor(Math.max(0, Math.min(255, b)))})`;
+    }
+    function getBrightness() {
+        const t = gameTime;
+        if (t < 0.25) return 0.2 + t * 3.2;
+        if (t < 0.5) return 1;
+        if (t < 0.75) return 1 - (t - 0.5) * 3.2;
+        return 0.2 + (1 - t) * 3.2;
+    }
+
+    function render() {
+        if (!gameStarted) return;
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = getSkyColor();
+        ctx.fillRect(0, 0, W, H);
+
+        const brightness = getBrightness();
+        const isNight = brightness < 0.5;
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+        for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+        for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+        for (const b of bloodStains) {
+            ctx.fillStyle = `rgba(139, 0, 0, ${b.alpha})`;
+            ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill();
+        }
+
+        for (const b of buildings) {
+            ctx.fillStyle = b.color;
+            ctx.fillRect(b.x, b.y, b.w, b.h);
+            const cols = Math.floor(b.w / 18), rows = Math.floor(b.h / 18);
+            for (let r = 0; r < Math.min(rows, 4); r++) {
+                for (let c = 0; c < Math.min(cols, 4); c++) {
+                    const wx = b.x + 4 + c * (b.w - 8) / Math.min(cols, 4);
+                    const wy = b.y + 4 + r * (b.h - 8) / Math.min(rows, 4);
+                    ctx.fillStyle = isNight ? (Math.random() > 0.2 ? 'rgba(255,220,100,0.6)' : 'rgba(50,50,80,0.3)') : 'rgba(50,50,80,0.2)';
+                    ctx.fillRect(wx, wy, 6, 8);
+                }
+            }
+        }
+
+        for (const s of shops) {
+            ctx.fillStyle = '#fbbf24';
+            ctx.shadowColor = 'rgba(251,191,36,0.5)'; ctx.shadowBlur = 20;
+            ctx.fillRect(s.x, s.y, s.w, s.h);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#1a1a2e';
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('$', s.x + s.w/2, s.y + s.h/2);
+        }
+
+        for (const c of escapeCars) {
+            if (!c.active || c.occupied) continue;
+            const pulse = 0.5 + Math.sin(Date.now() / 300) * 0.3;
+            const glow = ctx.createRadialGradient(c.x, c.y, 5, c.x, c.y, 40);
+            glow.addColorStop(0, `rgba(255,255,100,${0.3 * pulse})`);
+            glow.addColorStop(1, 'rgba(255,255,100,0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath(); ctx.arc(c.x, c.y, 40, 0, Math.PI * 2); ctx.fill();
+
+            ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.dir);
+            ctx.fillStyle = c.color;
+            ctx.shadowBlur = 15; ctx.shadowColor = c.color;
+            ctx.fillRect(-c.w/2, -c.h/2, c.w, c.h);
+            ctx.shadowBlur = 0;
+            ctx.restore();
+
+            ctx.fillStyle = 'rgba(255,255,100,0.9)';
+            ctx.font = 'bold 9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🏍️ ' + c.name, c.x, c.y - 25);
+        }
+
+        for (const t of missionTargets) {
+            ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            ctx.beginPath(); ctx.arc(t.x, t.y, t.radius + Math.sin(Date.now() / 300) * 5, 0, Math.PI * 2); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(251,191,36,0.2)';
+            ctx.beginPath(); ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 24px sans-serif';
+            ctx.fillText('🎯', t.x, t.y);
+        }
+
+        for (const npc of npcs) {
+            ctx.save(); ctx.translate(npc.x, npc.y);
+            ctx.fillStyle = npc.allied ? '#4ade80' : npc.color;
+            ctx.beginPath(); ctx.arc(0, 0, npc.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#f5d0b8';
+            ctx.beginPath(); ctx.arc(0, -4, 5, 0, Math.PI * 2); ctx.fill();
+            if (npc.recruitable && !npc.allied) {
+                ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 10px sans-serif';
+                ctx.fillText('👥', 0, -15);
+            }
+            ctx.restore();
+        }
+
+        for (const v of vehicles) {
+            if (!v.active || v.occupied) continue;
+            ctx.save(); ctx.translate(v.x, v.y); ctx.rotate(v.dir);
+            if (v.type === 'car') { ctx.fillStyle = v.color; ctx.fillRect(-18, -9, 36, 18); }
+            else if (v.type === 'moto') { ctx.fillStyle = v.color; ctx.fillRect(-12, -6, 24, 12); }
+            else if (v.type === 'avion') { ctx.fillStyle = v.color; ctx.fillRect(-25, -12, 50, 24); ctx.fillRect(-30, -18, 10, 6); ctx.fillRect(20, -18, 10, 6); }
+            ctx.restore();
+        }
+
+        for (const p of policeCars) {
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.dir);
+            ctx.fillStyle = p.burning > 0 ? '#7a2a2a' : '#1e40af';
+            ctx.fillRect(-18, -9, 36, 18);
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(-14, -7, 8, 14); ctx.fillRect(6, -7, 8, 14);
+            const gc = Math.floor(Date.now() / 200) % 2 === 0 ? '#ef4444' : '#3b82f6';
+            ctx.fillStyle = gc; ctx.shadowBlur = 20; ctx.shadowColor = gc;
+            ctx.fillRect(-3, -3, 6, 6);
+            ctx.shadowBlur = 0;
+            if (p.burning > 0) {
+                for (let f = 0; f < 5; f++) {
+                    ctx.fillStyle = Math.random() < 0.5 ? '#fbbf24' : '#ef4444';
+                    ctx.globalAlpha = 0.7;
+                    ctx.beginPath();
+                    ctx.arc((Math.random() - 0.5) * 30, (Math.random() - 0.5) * 30, 3 + Math.random() * 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+            ctx.restore();
+        }
+
+        for (const p of pickups) {
+            const bobY = Math.sin(p.bob) * 3;
+            if (p.type === 'money') { ctx.fillStyle = '#4ade80'; }
+            else if (p.type === 'health') { ctx.fillStyle = '#f87171'; }
+            else if (p.type === 'armor') { ctx.fillStyle = '#60a5fa'; }
+            else if (p.type === 'speed') { ctx.fillStyle = '#fbbf24'; }
+            else if (p.type === 'bomb') { ctx.fillStyle = '#ef4444'; }
+            ctx.shadowBlur = 20; ctx.shadowColor = ctx.fillStyle;
+            ctx.beginPath(); ctx.arc(p.x, p.y + bobY, p.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'white'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            const icons = { money: '$', health: '+', armor: '🛡️', speed: '⚡', bomb: '💥' };
+            ctx.fillText(icons[p.type] || '?', p.x, p.y + bobY);
+        }
+
+        for (const e of enemies) {
+            ctx.save(); ctx.translate(e.x, e.y);
+            ctx.fillStyle = e.hitFlash > 0 ? '#ffffff' : e.color;
+            ctx.shadowBlur = 15;
+            ctx.beginPath(); ctx.arc(0, 0, e.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0;
+            const ang = Math.atan2(player.y - e.y, player.x - e.x);
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath(); ctx.arc(Math.cos(ang) * 4 - 3, Math.sin(ang) * 4 - 3, 2.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(Math.cos(ang) * 4 + 3, Math.sin(ang) * 4 - 3, 2.5, 0, Math.PI * 2); ctx.fill();
+            const hpR = e.hp / e.maxHp;
+            ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(-18, -e.radius - 10, 36, 5);
+            ctx.fillStyle = hpR > 0.5 ? '#4ade80' : '#f87171';
+            ctx.fillRect(-18, -e.radius - 10, 36 * hpR, 5);
+            ctx.restore();
+        }
+
+        for (const b of bullets) {
+            ctx.fillStyle = b.color;
+            ctx.shadowBlur = 12; ctx.shadowColor = b.color;
+            ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        if (!(player.inVehicle && player.vehicleType === 'escape')) {
+            ctx.save(); ctx.translate(player.x, player.y);
+            ctx.fillStyle = player.invincible > 0 ? '#4ade80' : (armor > 0 ? '#60a5fa' : '#3b82f6');
+            ctx.shadowBlur = 20;
+            ctx.beginPath(); ctx.arc(0, 0, player.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0;
+            if (armor > 0) {
+                ctx.strokeStyle = `rgba(96, 165, 250, ${armor / 100})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(0, 0, player.radius + 5, 0, Math.PI * 2); ctx.stroke();
+            }
+            ctx.fillStyle = '#f5d0b8';
+            ctx.beginPath(); ctx.arc(0, -6, 8, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#2a2a3a'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(player.angle) * 10, Math.sin(player.angle) * 10);
+            ctx.lineTo(Math.cos(player.angle) * 32, Math.sin(player.angle) * 32);
+            ctx.stroke();
+            ctx.restore();
+        } else {
+            const v = escapeCars[player.vehicleIndex];
+            if (v) {
+                ctx.save(); ctx.translate(v.x, v.y); ctx.rotate(v.dir);
+                ctx.fillStyle = v.color;
+                ctx.shadowBlur = 25; ctx.shadowColor = v.color;
+                ctx.fillRect(-v.w/2, -v.h/2, v.w, v.h);
+                ctx.shadowBlur = 0;
+                ctx.restore();
+            }
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.dx; p.y += p.dy; p.dx *= 0.97; p.dy *= 0.97; p.life--;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            ctx.globalAlpha = p.life / p.maxLife;
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+
+        if (weather === 'rain' || weather === 'storm') {
+            ctx.strokeStyle = 'rgba(150, 180, 220, 0.5)';
+            ctx.lineWidth = 1;
+            for (const drop of rainDrops) {
+                ctx.beginPath();
+                ctx.moveTo(drop.x, drop.y);
+                ctx.lineTo(drop.x - 2, drop.y + drop.len);
+                ctx.stroke();
+            }
+        }
+        if (weather === 'fog') {
+            ctx.fillStyle = 'rgba(200, 210, 220, 0.15)';
+            ctx.fillRect(0, 0, W, H);
+        }
+        if (lightningFlash > 0) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${lightningFlash / 200 * 0.5})`;
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        if (brightness < 1) {
+            ctx.fillStyle = `rgba(0, 0, 50, ${(1 - brightness) * 0.4})`;
+            ctx.fillRect(0, 0, W, H);
+        }
+        if (health < 30 && health > 0) {
+            ctx.fillStyle = `rgba(255,0,0,${0.05 + (1 - health / 30) * 0.1})`;
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        renderMinimap();
+    }
+
+    function renderMinimap() {
+        const scale = 110 / Math.max(W, H);
+        miniCtx.clearRect(0, 0, 110, 110);
+        miniCtx.fillStyle = 'rgba(10,14,23,0.9)';
+        miniCtx.fillRect(0, 0, 110, 110);
+        for (const b of buildings) { miniCtx.fillStyle = 'rgba(60,80,120,0.5)'; miniCtx.fillRect(b.x * scale, b.y * scale, b.w * scale, b.h * scale); }
+        for (const s of shops) { miniCtx.fillStyle = '#fbbf24'; miniCtx.fillRect(s.x * scale - 2, s.y * scale - 2, 4, 4); }
+        for (const c of escapeCars) { if (!c.active || c.occupied) continue; miniCtx.fillStyle = '#ffff00'; miniCtx.beginPath(); miniCtx.arc(c.x * scale, c.y * scale, 3, 0, Math.PI * 2); miniCtx.fill(); }
+        for (const v of vehicles) { if (!v.active) continue; miniCtx.fillStyle = 'rgba(255,200,100,0.4)'; miniCtx.fillRect(v.x * scale - 2, v.y * scale - 1, 4, 3); }
+        for (const e of enemies) { miniCtx.fillStyle = '#f87171'; miniCtx.beginPath(); miniCtx.arc(e.x * scale, e.y * scale, 2.5, 0, Math.PI * 2); miniCtx.fill(); }
+        for (const p of policeCars) { miniCtx.fillStyle = p.burning > 0 ? '#ff6600' : '#3b82f6'; miniCtx.beginPath(); miniCtx.arc(p.x * scale, p.y * scale, 3, 0, Math.PI * 2); miniCtx.fill(); }
+        for (const t of missionTargets) { miniCtx.fillStyle = '#fbbf24'; miniCtx.beginPath(); miniCtx.arc(t.x * scale, t.y * scale, 4, 0, Math.PI * 2); miniCtx.fill(); }
+        miniCtx.fillStyle = '#3b82f6';
+        miniCtx.beginPath(); miniCtx.arc(player.x * scale, player.y * scale, 4, 0, Math.PI * 2); miniCtx.fill();
+    }
+
+    function gameLoop() {
+        if (gameStarted) { update(); render(); }
+        requestAnimationFrame(gameLoop);
+    }
+
+    document.getElementById('startBtn').addEventListener('click', function() {
+        initAudio();
+        gameStarted = true;
+        gameStartTime = Date.now();
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('hud').style.display = 'flex';
+        document.getElementById('healthBarContainer').style.display = 'block';
+        document.getElementById('missionBox').style.display = 'block';
+        document.getElementById('minimap').style.display = 'block';
+        document.querySelector('.controls-info').style.display = 'block';
+        musicControl.style.display = 'flex';
+        isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || ('ontouchstart' in window);
+        if (isMobile) document.getElementById('touchControls').classList.add('active');
+        // ⚙️ Argent de départ selon difficulté
+        if (!loadGame()) {
+            money = difficulty.playerStartMoney;
+            health = 100;
+            kills = 0;
+            level = 1;
+        }
+        generateCity();
+        for (let i = 0; i < 4; i++) spawnEnemy();
+        document.getElementById('missionBox').textContent = '🎯 Éliminez 5 ennemis pour gagner 1000$';
+        renderAchievements();
+
+        setTimeout(() => {
+            if (!musicInitialized) { musicInitialized = true; loadMusic(0); }
+            bgMusic.volume = musicVolume;
+            bgMusic.play().then(() => {
+                isMusicPlaying = true;
+                musicPlayBtn.textContent = '⏸';
+                musicPlayBtn.classList.remove('muted');
+                equalizer.classList.remove('paused');
+                startEqualizer();
+                showMusicNotif('🎵 ' + playlist[0].title);
+            }).catch(e => {
+                musicPlayBtn.textContent = '▶';
+                musicPlayBtn.classList.add('muted');
+                showMusicNotif('🎵 Cliquez sur ▶ pour la musique');
+            });
+        }, 500);
+    });
+
+    document.addEventListener('keydown', (e) => { keys[e.key] = true; if (e.key === ' ' || e.key === 'Space') e.preventDefault(); });
+    document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = Math.max(0, Math.min(W, (e.clientX - rect.left) * (canvas.width / rect.width)));
+        mouseY = Math.max(0, Math.min(H, (e.clientY - rect.top) * (canvas.height / rect.height)));
+    });
+    canvas.addEventListener('click', () => { if (gameStarted) shoot(); });
+
+    const joystick = document.getElementById('joystick');
+    const joystickKnob = document.getElementById('joystickKnob');
+
+    function handleJoystick(e) {
+        e.preventDefault();
+        const rect = joystick.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        let cx = touch.clientX - rect.left - rect.width / 2;
+        let cy = touch.clientY - rect.top - rect.height / 2;
+        const maxR = rect.width / 2 - 10;
+        const dist = Math.hypot(cx, cy);
+        if (dist > maxR) { cx = cx / dist * maxR; cy = cy / dist * maxR; }
+        joystickKnob.style.transform = `translate(calc(-50% + ${cx}px), calc(-50% + ${cy}px))`;
+        joystickX = cx / maxR;
+        joystickY = cy / maxR;
+    }
+
+    joystick.addEventListener('touchstart', (e) => { joystickActive = true; handleJoystick(e); }, { passive: false });
+    joystick.addEventListener('touchmove', (e) => { if (joystickActive) handleJoystick(e); }, { passive: false });
+    joystick.addEventListener('touchend', () => { joystickActive = false; joystickX = 0; joystickY = 0; joystickKnob.style.transform = 'translate(-50%, -50%)'; });
+
+    document.getElementById('btnShoot').addEventListener('touchstart', (e) => { e.preventDefault(); shoot(); }, { passive: false });
+    document.getElementById('btnEnter').addEventListener('touchstart', (e) => { e.preventDefault(); enterVehicle(); }, { passive: false });
+    document.getElementById('btnBuy').addEventListener('touchstart', (e) => { e.preventDefault(); tryToBuy(); }, { passive: false });
+    document.getElementById('btnWeapon').addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const w = ['pistolet', 'fusil', 'sniper'];
+        const idx = w.indexOf(currentWeapon);
+        currentWeapon = w[(idx + 1) % w.length];
+        weaponAmmo = weapons[currentWeapon].maxAmmo;
+        isReloading = false;
+        showNotification("🔫 " + currentWeapon);
+    }, { passive: false });
+    document.getElementById('btnMusic').addEventListener('touchstart', (e) => { e.preventDefault(); toggleMusicPlay(); }, { passive: false });
+    document.getElementById('btnAchievements').addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        document.getElementById('achievementsPanel').classList.toggle('show');
+        renderAchievements();
+    }, { passive: false });
+
+    updateProgress();
+    gameLoop();
+})();
+</script>
+</body>
+</html>
